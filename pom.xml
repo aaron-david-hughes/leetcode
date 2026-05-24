@@ -9,6 +9,7 @@
 
     <modules>
         <module>roman-to-integer</module>
+        <module>integer-to-roman</module>
     </modules>
 
     <dependencyManagement>
