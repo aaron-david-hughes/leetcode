@@ -78,7 +78,7 @@ GitHub Pages publishes an up-to-date site from this README on every merge to `ma
 
 ## Adding a New Problem
 
-The fastest way to scaffold a new problem is the **GitHub Actions workflow**:
+The fastest way to scaffold a new problem is the **[GitHub Actions workflow](https://github.com/aaron-david-hughes/leetcode/actions/workflows/add-problem.yml)**:
 
 1. Go to **Actions** > **Add LeetCode Problem** > **Run workflow**
 2. Fill in the inputs:
