@@ -11,6 +11,7 @@ Clean, well-documented, thoroughly tested LeetCode solutions — built to produc
 | 13 | [Roman to Integer](https://leetcode.com/problems/roman-to-integer/) | [`roman-to-integer/`](roman-to-integer/) |
 | 12 | [Integer to Roman](https://leetcode.com/problems/integer-to-roman/) | [`integer-to-roman/`](integer-to-roman/) |
 | 6 | [Zigzag Conversion](https://leetcode.com/problems/zigzag-conversion/) | [`zigzag-conversion/`](zigzag-conversion/) |
+| 5 | [Longest Palindromic Substring](https://leetcode.com/problems/longest-palindromic-substring/) | [`longest-palindromic-substring/`](longest-palindromic-substring/) |
 
 ---
 

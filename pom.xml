@@ -8,6 +8,7 @@
     <packaging>pom</packaging>
 
     <modules>
+        <module>longest-palindromic-substring</module>
         <module>roman-to-integer</module>
         <module>integer-to-roman</module>
         <module>zigzag-conversion</module>
