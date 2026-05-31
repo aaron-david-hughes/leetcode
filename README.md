@@ -1,7 +1,5 @@
 # 🧑‍💻 Enterprise-Grade LeetCode Solutions
 
-![CI](https://github.com/aarondavidhughes/leetcode/actions/workflows/ci.yml/badge.svg)
-
 Clean, well-documented, thoroughly tested LeetCode solutions — built to production standards.
 
 ---
