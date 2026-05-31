@@ -1,0 +1,73 @@
+name: Add LeetCode Problem
+
+on:
+  workflow_dispatch:
+    inputs:
+      problem_number:
+        description: "LeetCode problem number (e.g. 1)"
+        required: true
+        type: string
+      problem_title:
+        description: "Problem title (e.g. Two Sum)"
+        required: true
+        type: string
+      problem_description:
+        description: "Full problem description (optional — paste from LeetCode)"
+        required: false
+        type: string
+        default: ""
+      method_signature:
+        description: 'Method signature (e.g. int[] twoSum(int[] nums, int target))'
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Scaffold new problem module
+        env:
+          PROBLEM_NUMBER: ${{ inputs.problem_number }}
+          PROBLEM_TITLE: ${{ inputs.problem_title }}
+          PROBLEM_DESC: ${{ inputs.problem_description }}
+          METHOD_SIGNATURE: ${{ inputs.method_signature }}
+        run: |
+          chmod +x .github/scripts/add-problem.sh
+          .github/scripts/add-problem.sh
+
+      - name: Verify new module compiles and tests pass
+        run: |
+          MODULE_NAME="$(echo '${{ inputs.problem_title }}' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')"
+          echo "▶ Running: mvn test -pl ${MODULE_NAME}"
+          mvn test -pl "${MODULE_NAME}" --batch-mode
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push to new branch
+        run: |
+          MODULE_NAME="$(echo '${{ inputs.problem_title }}' | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//')"
+          BRANCH="add-${MODULE_NAME}"
+          git checkout -b "${BRANCH}"
+          git add .
+          git commit -m "add ${MODULE_NAME} module scaffold [skip ci]"
+          git push origin "${BRANCH}"
