@@ -20,7 +20,7 @@ DEFAULT_RETURN="null"
 METHOD_NAME="solve"
 PARAMS=""
 if [[ -n "${METHOD_SIGNATURE:-}" ]]; then
-  # Extract return type (everything before the first space-followed-by-identifier-open-paren)
+  # Extract return type (everything before the method name + parenthesis)
   RETURN_TYPE=$(echo "$METHOD_SIGNATURE" | sed 's/^\([^(]*\) .*/\1' | xargs)
   METHOD_NAME=$(echo "$METHOD_SIGNATURE" | sed 's/^[^ ]* \([^(]*\) .*/\1')
   # Extract params between parens
@@ -41,10 +41,9 @@ if [[ -n "${METHOD_SIGNATURE:-}" ]]; then
     String\[\]) DEFAULT_RETURN="new String[0]" ;;
     char\[\])   DEFAULT_RETURN="new char[0]" ;;
     boolean\[\]) DEFAULT_RETURN="new boolean[0]" ;;
-    List\*|ArrayList*)
+    List*|ArrayList*)
                 DEFAULT_RETURN="new ArrayList<>()" ;;
     *)
-                # If it ends with [], treat as array
                 if [[ "$RETURN_TYPE" == *"[]" ]]; then
                   DEFAULT_RETURN="new ${RETURN_TYPE} {}"
                 else
@@ -59,16 +58,12 @@ echo "   Params: ${PARAMS}"
 
 # ── Build default-return statement for the stub ───────────────
 if [[ -z "$DEFAULT_RETURN" ]]; then
-  DEFAULT_STUB=""           # void method — no return
+  DEFAULT_STUB=""
 elif [[ "$DEFAULT_RETURN" == "null" ]]; then
   DEFAULT_STUB="return null;"
 else
   DEFAULT_STUB="return ${DEFAULT_RETURN};"
 fi
-
-# ── Build parameter list with type erasure for the stub ───────
-# For the stub, we keep the real types so it compiles cleanly
-STUB_PARAMS="$PARAMS"
 
 # ── Create directory structure ────────────────────────────────
 MODULE_DIR="${MODULE_NAME}"
@@ -134,7 +129,6 @@ echo "📄 Generated README.md"
 
 # ── Generate Solution.java stub ───────────────────────────────
 if [[ -n "${METHOD_SIGNATURE:-}" ]]; then
-  # Normalize: collapse newlines/spaces in the signature to a single-line form
   CLEAN_SIG=$(echo "$METHOD_SIGNATURE" | tr '\n' ' ' | sed 's/  */ /g' | xargs)
   cat > "${SRC_MAIN}/Solution.java" <<JAVAEOF
 package com.github.aarondavidhughes;
@@ -192,17 +186,11 @@ TESTEOF
 echo "📄 Generated SolutionTest.java"
 
 # ── Update parent pom.xml — insert module alphabetically ─────
-# Use a simple sed-based insertion while maintaining alphabetical order
-# We add the <module> line only if it's not already present
 if grep -q "<module>${MODULE_NAME}</module>" pom.xml; then
   echo "⚠️  Module '${MODULE_NAME}' already listed in parent pom.xml — skipping"
 else
-  # Find the right insertion point inside <modules>…</modules>
-  # We want to insert before the first module that sorts *after* ours alphabetically
-  # If ours sorts last, insert before </modules>
-
-  # Extract all current modules
-  CURRENT_MODULES=$(sed -n '/<modules>/,/<\/modules>/p' pom.xml | grep '<module>' | sed 's/.*<module>\(.*\)<\/module>.*/\1/')
+  # Use awk for reliable cross-platform insertion with newlines
+  CURRENT_MODULES=$(awk '/<modules>/{found=1} found{print} /<\/modules>/{found=0}' pom.xml | grep '<module>' | sed 's/.*<module>\(.*\)<\/module>.*/\1/')
 
   INSERT_BEFORE=""
   for mod in $CURRENT_MODULES; do
@@ -213,10 +201,23 @@ else
   done
 
   if [[ -n "$INSERT_BEFORE" ]]; then
-    sed -i "s|<module>${INSERT_BEFORE}</module>|<module>${MODULE_NAME}</module>\n        <module>${INSERT_BEFORE}</module>|" pom.xml
+    awk -v new_mod="${MODULE_NAME}" -v insert_before="${INSERT_BEFORE}" '
+      $0 ~ "<module>" insert_before "</module>" {
+        print "        <module>" new_mod "</module>"
+        print $0
+        next
+      }
+      { print }
+    ' pom.xml > pom.xml.tmp && mv pom.xml.tmp pom.xml
   else
-    # Insert before </modules> (it's alphabetically last)
-    sed -i "s|</modules>|        <module>${MODULE_NAME}</module>\n    </modules>|" pom.xml
+    awk -v new_mod="${MODULE_NAME}" '
+      /<\/modules>/ {
+        print "        <module>" new_mod "</module>"
+        print $0
+        next
+      }
+      { print }
+    ' pom.xml > pom.xml.tmp && mv pom.xml.tmp pom.xml
   fi
   echo "📝 Updated parent pom.xml"
 fi
@@ -227,25 +228,18 @@ if grep -q "| ${PROBLEM_NUMBER} " README.md; then
 else
   NEW_ROW="| ${PROBLEM_NUMBER} | [${PROBLEM_TITLE}](${LEETCODE_URL}) | 🚧 In Progress | [\`${MODULE_NAME}/\`](${MODULE_NAME}/) |"
 
-  # Find the right row to insert after (descending problem number order)
-  # We need to find the first row in the table with a number LESS than ours
-  # and insert our row ABOVE it. If all existing rows have higher numbers, we
-  # insert after the last row.
-  HEADER_LINE=$(grep -n '"| # | Problem | Status | Solution |"' README.md | head -1 | cut -d: -f1)
-  if [[ -z "$HEADER_LINE" ]]; then
-    HEADER_LINE=$(grep -n '| # | Problem | Status | Solution |' README.md | head -1 | cut -d: -f1)
-  fi
+  # Find the header line of the tracker table
+  HEADER_LINE=$(grep -n '| # | Problem | Status | Solution |' README.md | head -1 | cut -d: -f1)
   if [[ -z "$HEADER_LINE" ]]; then
     HEADER_LINE=$(grep -n '|---|' README.md | head -2 | tail -1 | cut -d: -f1)
   fi
 
-  # Extract data rows (after header + separator), find insertion point
+  # Find the insertion line: first row with a number less than ours
+  # (table is in descending order, so we insert ABOVE that row)
   INSERT_LINE=""
   while IFS= read -r line; do
-    # Extract problem number from row
     NUM=$(echo "$line" | sed 's/^| \([0-9]*\) .*/\1/' | tr -d ' ')
     if [[ "$NUM" =~ ^[0-9]+$ ]] && [[ "$NUM" -lt "$PROBLEM_NUMBER" ]]; then
-      # Get line number of this row
       ROW_LINE=$(grep -nF "$line" README.md | head -1 | cut -d: -f1)
       INSERT_LINE="$ROW_LINE"
       break
@@ -253,15 +247,16 @@ else
   done < <(tail -n +$((HEADER_LINE + 2)) README.md | grep '^|')
 
   if [[ -n "$INSERT_LINE" ]]; then
-    sed -i "${INSERT_LINE}i\\
-${NEW_ROW}" README.md
+    # Insert new row before the found line
+    awk -v line_num="$INSERT_LINE" -v new_row="$NEW_ROW" '
+      NR == line_num { print new_row }
+      { print }
+    ' README.md > README.md.tmp && mv README.md.tmp README.md
   else
     # Ours is the smallest number — insert after the last table row
-    # Find the last table row (line starting with | and within the table section)
     LAST_ROW_LINE=""
     while IFS= read -r line; do
-      ROW_NUM=$(echo "$line" | grep -c '^|')
-      if [[ "$ROW_NUM" -gt 0 ]]; then
+      if echo "$line" | grep -q '^|'; then
         LINE_NUM=$(grep -nF "$line" README.md | head -1 | cut -d: -f1)
         if [[ -n "$LINE_NUM" ]] && [[ "$LINE_NUM" -gt "$HEADER_LINE" ]]; then
           LAST_ROW_LINE="$LINE_NUM"
@@ -269,12 +264,15 @@ ${NEW_ROW}" README.md
       fi
     done < <(tail -n +$((HEADER_LINE + 2)) README.md | grep '^|')
     if [[ -n "$LAST_ROW_LINE" ]]; then
-      sed -i "$((LAST_ROW_LINE + 1))i\\
-${NEW_ROW}" README.md
+      awk -v line_num="$((LAST_ROW_LINE + 1))" -v new_row="$NEW_ROW" '
+        NR == line_num { print new_row }
+        { print }
+      ' README.md > README.md.tmp && mv README.md.tmp README.md
     else
-      # Fallback: insert right after the header separator
-      sed -i "$((HEADER_LINE + 1))i\\
-${NEW_ROW}" README.md
+      awk -v line_num="$((HEADER_LINE + 1))" -v new_row="$NEW_ROW" '
+        NR == line_num { print new_row }
+        { print }
+      ' README.md > README.md.tmp && mv README.md.tmp README.md
     fi
   fi
   echo "📝 Updated README.md tracker"
