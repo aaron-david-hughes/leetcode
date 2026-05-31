@@ -8,11 +8,11 @@ Clean, well-documented, thoroughly tested LeetCode solutions — built to produc
 
 ## 📋 Problem Tracker
 
-| # | Problem | Status | Solution |
-|---|---------|--------|----------|
-| 13 | [Roman to Integer](https://leetcode.com/problems/roman-to-integer/) | ✅ Done | [`roman-to-integer/`](roman-to-integer/) |
-| 12 | [Integer to Roman](https://leetcode.com/problems/integer-to-roman/) | ✅ Done | [`integer-to-roman/`](integer-to-roman/) |
-| 6 | [Zigzag Conversion](https://leetcode.com/problems/zigzag-conversion/) | 🚧 In Progress | [`zigzag-conversion/`](zigzag-conversion/) |
+| # | Problem | Solution |
+|---|---------|----------|
+| 13 | [Roman to Integer](https://leetcode.com/problems/roman-to-integer/) | [`roman-to-integer/`](roman-to-integer/) |
+| 12 | [Integer to Roman](https://leetcode.com/problems/integer-to-roman/) | [`integer-to-roman/`](integer-to-roman/) |
+| 6 | [Zigzag Conversion](https://leetcode.com/problems/zigzag-conversion/) | [`zigzag-conversion/`](zigzag-conversion/) |
 
 ---
 
@@ -78,12 +78,28 @@ GitHub Pages publishes an up-to-date site from this README on every merge to `ma
 
 ---
 
-## ➕ Adding a New Problem
+## Adding a New Problem
 
-1. Create a new directory named after the problem (kebab-case)
+The fastest way to scaffold a new problem is the **GitHub Actions workflow**:
+
+1. Go to **Actions** > **Add LeetCode Problem** > **Run workflow**
+2. Fill in the inputs:
+   - **Problem number** — e.g. `1`
+   - **Problem title** — e.g. `Two Sum`
+   - **Problem description** *(optional)* — paste the full description from LeetCode
+   - **Method signature** *(optional)* — e.g. `int[] twoSum(int[] nums, int target)`
+3. Click **Run workflow**
+
+The action will scaffold the module, run the build, and push to a new branch `add-<module-name>`. The workflow summary includes a direct link to the branch. Open a PR from that branch to fill in the solution and tests, then merge.
+
+### Manual Setup
+
+To scaffold a problem manually:
+
+1. Create a new directory named after the problem in kebab-case
 2. Copy the `pom.xml` pattern from an existing module (child of parent `com.github.aarondavidhughes:leetcode`)
 3. Implement `src/main/java/com/github/aarondavidhughes/Solution.java`
 4. Add parameterized tests in `src/test/java/com/github/aarondavidhughes/SolutionTest.java`
 5. Run `mvn test -pl <new-module>` to verify
-6. Update the [Problem Tracker](#-problem-table) table above
+6. Update the [Problem Tracker](#-problem-tracker) table
 7. Add the module to the root `pom.xml` `<modules>` section

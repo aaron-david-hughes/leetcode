@@ -231,7 +231,7 @@ fi
 if grep -q "| ${PROBLEM_NUMBER} " README.md; then
   echo "⚠️  Problem #${PROBLEM_NUMBER} already in README tracker — skipping"
 else
-  NEW_ROW="| ${PROBLEM_NUMBER} | [${PROBLEM_TITLE}](${LEETCODE_URL}) | 🚧 In Progress | [\`${MODULE_NAME}/\`](${MODULE_NAME}/) |"
+  NEW_ROW="| ${PROBLEM_NUMBER} | [${PROBLEM_TITLE}](${LEETCODE_URL}) | [\`${MODULE_NAME}/\`](${MODULE_NAME}/) |"
 
   # Find the header line of the tracker table
   HEADER_LINE=$(grep -n '| # | Problem | Status | Solution |' README.md | head -1 | cut -d: -f1)
@@ -284,10 +284,13 @@ else
 fi
 
 echo ""
-echo "✅ Module '${MODULE_NAME}' scaffolded successfully!"
-echo "   Branch: add-${MODULE_NAME}"
-echo "   Files:"
-echo "     ${MODULE_DIR}/pom.xml"
-echo "     ${MODULE_DIR}/README.md"
-echo "     ${SRC_MAIN}/Solution.java"
-echo "     ${SRC_TEST}/SolutionTest.java"
+echo "Module '${MODULE_NAME}' scaffolded successfully."
+echo ""
+echo "Branch: add-${MODULE_NAME}"
+echo "URL: https://github.com/${GITHUB_REPOSITORY:-aaron-david-hughes/leetcode}/tree/add-${MODULE_NAME}"
+echo ""
+echo "Files created:"
+echo "  ${MODULE_DIR}/pom.xml"
+echo "  ${MODULE_DIR}/README.md"
+echo "  ${SRC_MAIN}/Solution.java"
+echo "  ${SRC_TEST}/SolutionTest.java"
