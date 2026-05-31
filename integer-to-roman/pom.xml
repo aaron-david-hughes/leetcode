@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>integer-to-roman</artifactId>
-    <packaging>maven-plugin</packaging>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
