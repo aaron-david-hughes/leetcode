@@ -12,7 +12,6 @@ Clean, well-documented, thoroughly tested LeetCode solutions — built to produc
 |---|---------|--------|----------|
 | 13 | [Roman to Integer](https://leetcode.com/problems/roman-to-integer/) | ✅ Done | [`roman-to-integer/`](roman-to-integer/) |
 | 12 | [Integer to Roman](https://leetcode.com/problems/integer-to-roman/) | ✅ Done | [`integer-to-roman/`](integer-to-roman/) |
-| 6  | [Zigzag Conversion](https://leetcode.com/problems/zigzag-conversion/) | 🚧 In Progress | [`zigzag/`](zigzag/) |
 
 ---
 
@@ -28,12 +27,7 @@ leetcode/
 │   └── src/
 │       ├── main/java/.../Solution.java
 │       └── test/java/.../SolutionTest.java
-├── integer-to-roman/          (LeetCode #12)
-│   ├── pom.xml
-│   └── src/
-│       ├── main/java/.../Solution.java
-│       └── test/java/.../SolutionTest.java
-└── zigzag/                    (LeetCode #6)
+└── integer-to-roman/          (LeetCode #12)
     ├── pom.xml
     └── src/
         ├── main/java/.../Solution.java
