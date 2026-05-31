@@ -234,9 +234,9 @@ else
   NEW_ROW="| ${PROBLEM_NUMBER} | [${PROBLEM_TITLE}](${LEETCODE_URL}) | [\`${MODULE_NAME}/\`](${MODULE_NAME}/) |"
 
   # Find the header line of the tracker table
-  HEADER_LINE=$(grep -n '| # | Problem | Status | Solution |' README.md | head -1 | cut -d: -f1)
+  HEADER_LINE=$(grep -n '| # | Problem | Solution |' README.md | head -1 | cut -d: -f1)
   if [[ -z "$HEADER_LINE" ]]; then
-    HEADER_LINE=$(grep -n '|---|' README.md | head -2 | tail -1 | cut -d: -f1)
+    HEADER_LINE=$(grep -n '|---|' README.md | head -1 | cut -d: -f1)
   fi
 
   # Find the insertion line: first row with a number less than ours
