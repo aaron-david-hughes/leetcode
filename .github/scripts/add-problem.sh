@@ -20,11 +20,16 @@ DEFAULT_RETURN="null"
 METHOD_NAME="solve"
 PARAMS=""
 if [[ -n "${METHOD_SIGNATURE:-}" ]]; then
-  # Extract return type (everything before the method name + parenthesis)
-  RETURN_TYPE=$(echo "$METHOD_SIGNATURE" | sed 's/^\([^(]*\) .*/\1' | xargs)
-  METHOD_NAME=$(echo "$METHOD_SIGNATURE" | sed 's/^[^ ]* \([^(]*\) .*/\1')
-  # Extract params between parens
-  PARAMS=$(echo "$METHOD_SIGNATURE" | sed 's/^.*(\(.*\)).*/\1/')
+  # Extract return type (everything before the first space)
+  RETURN_TYPE="${METHOD_SIGNATURE%% *}"
+  # Extract method name (between first space and first open paren)
+  REST="${METHOD_SIGNATURE#* }"
+  METHOD_NAME="${REST%%(*}"
+  # Trim trailing whitespace from method name
+  METHOD_NAME="${METHOD_NAME%"${METHOD_NAME##*[! ]}"}"
+  # Extract params between outermost parens
+  PARAMS="${REST#*(}"
+  PARAMS="${PARAMS%)}"
 
   case "$RETURN_TYPE" in
     int)        DEFAULT_RETURN="-1" ;;
@@ -190,7 +195,7 @@ if grep -q "<module>${MODULE_NAME}</module>" pom.xml; then
   echo "⚠️  Module '${MODULE_NAME}' already listed in parent pom.xml — skipping"
 else
   # Use awk for reliable cross-platform insertion with newlines
-  CURRENT_MODULES=$(awk '/<modules>/{found=1} found{print} /<\/modules>/{found=0}' pom.xml | grep '<module>' | sed 's/.*<module>\(.*\)<\/module>.*/\1/')
+  CURRENT_MODULES=$(awk '/<modules>/{found=1} found{print} /<\/modules>/{found=0}' pom.xml | grep '<module>' | sed 's|.*<module>\(.*\)</module>.*|\1|')
 
   INSERT_BEFORE=""
   for mod in $CURRENT_MODULES; do
@@ -238,7 +243,7 @@ else
   # (table is in descending order, so we insert ABOVE that row)
   INSERT_LINE=""
   while IFS= read -r line; do
-    NUM=$(echo "$line" | sed 's/^| \([0-9]*\) .*/\1/' | tr -d ' ')
+    NUM=$(echo "$line" | sed 's#^| \([0-9]*\) .*#\1#' | tr -d ' ')
     if [[ "$NUM" =~ ^[0-9]+$ ]] && [[ "$NUM" -lt "$PROBLEM_NUMBER" ]]; then
       ROW_LINE=$(grep -nF "$line" README.md | head -1 | cut -d: -f1)
       INSERT_LINE="$ROW_LINE"
