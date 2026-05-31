@@ -10,6 +10,7 @@
     <modules>
         <module>roman-to-integer</module>
         <module>integer-to-roman</module>
+        <module>zigzag-conversion</module>
     </modules>
 
     <properties>
